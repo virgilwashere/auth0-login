@@ -12,6 +12,5 @@ def test_parse():
     assert len(command.roles) == 2
 
 
-
 if __name__ == '__main__':
     test_parse()

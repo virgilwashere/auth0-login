@@ -20,7 +20,8 @@ import click
 
 from auth0_login import fatal, setting
 from auth0_login.saml.callback import SAMLAccessTokenCallbackHandler
-from auth0_login.util import assert_listen_port_is_available, get_listen_port_from_url
+from auth0_login.util import assert_listen_port_is_available
+from auth0_login.util import get_listen_port_from_url
 
 
 class SAMLGetAccessTokenCommand(object):
@@ -58,8 +59,10 @@ class SAMLGetAccessTokenCommand(object):
 
     def accept_saml_response(self):
         SAMLAccessTokenCallbackHandler.callback_url = self.callback_url
-        SAMLAccessTokenCallbackHandler.handler = (lambda r: self.set_saml_response(r))
-        httpd = HTTPServer(('0.0.0.0', self.listen_port), SAMLAccessTokenCallbackHandler)
+        SAMLAccessTokenCallbackHandler.handler = (
+            lambda r: self.set_saml_response(r))
+        httpd = HTTPServer(('0.0.0.0', self.listen_port),
+                           SAMLAccessTokenCallbackHandler)
         httpd.handle_request()
         httpd.server_close()
 

@@ -38,10 +38,9 @@ def get_federated_credentials(session: Session) -> ReadOnlyCredentials:
     except ClientError as e:
         fatal('failed to get federation token, %s', e)
 
+
 def open_aws_console(profile: str):
-    """
-    opens the AWS console for the specified profile.
-    """
+    """Open the AWS console for the specified profile."""
     s: Session = Session(profile_name=profile)
     c: ReadOnlyCredentials = s.get_credentials().get_frozen_credentials()
     if not c.token:

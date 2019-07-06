@@ -20,6 +20,7 @@ RELEASE_SUPPORT := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))/.mak
 VERSION=$(shell . $(RELEASE_SUPPORT) ; getVersion)
 TAG=$(shell . $(RELEASE_SUPPORT); getTag)
 
+VENV := $(shell pipenv --venv)
 SHELL=/bin/bash
 
 .PHONY: pre-build do-build post-build build release patch-release minor-release major-release tag check-status check-release showver \
@@ -33,7 +34,7 @@ pre-build:
 post-build:
 
 
-do-build: 
+do-build:
 	pipenv run python setup.py check
 	pipenv run python setup.py build
 	pipenv run python setup.py test
@@ -48,9 +49,9 @@ do-build:
 release: check-status check-release build upload
 
 
-upload: do-upload post-upload 
+upload: do-upload post-upload
 
-do-upload: 
+do-upload:
 	rm -rf dist/*
 	pipenv run python setup.py sdist
 	pipenv run twine upload dist/*
@@ -61,13 +62,13 @@ showver: .release
 	@. $(RELEASE_SUPPORT); getVersion
 
 tag-patch-release: VERSION := $(shell . $(RELEASE_SUPPORT); nextPatchLevel)
-tag-patch-release: .release tag 
+tag-patch-release: .release tag
 
 tag-minor-release: VERSION := $(shell . $(RELEASE_SUPPORT); nextMinorLevel)
-tag-minor-release: .release tag 
+tag-minor-release: .release tag
 
 tag-major-release: VERSION := $(shell . $(RELEASE_SUPPORT); nextMajorLevel)
-tag-major-release: .release tag 
+tag-major-release: .release tag
 
 patch-release: tag-patch-release release
 	@echo $(VERSION)
@@ -100,11 +101,11 @@ clean:
 	rm -rf build/* dist/*  *.egg-info
 
 clobber: clean
-	rm -rf venv
+	rm -rf $(VENV)
 
 test: do-build
-	@. venv/bin/activate && python setup.py test
-	
+	@. $(VENV)/bin/activate && python setup.py test
+
 autopep:
-	autopep8 --experimental --in-place --max-line-length 132 $(shell find . -name \*.py   | grep -v -e /.eggs/ -e /venv/ -e /build/ -e /dist/)
+	autopep8 --experimental --in-place --max-line-length 132 $(shell find . -name \*.py   | grep -v -e /.eggs/ -e /$(VENV)/ -e /build/ -e /dist/)
 

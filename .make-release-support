@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# -*- coding: utf-8 -*-
 #
 #   Copyright 2015  Xebia Nederland B.V.
+#   Copyright 2019  Virgil
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -15,92 +17,117 @@
 #   limitations under the License.
 #
 
-function hasChanges() {
-	test -n "$(git status -s .)"
+hasChanges() {
+  [[ -n "$(git status -s .)" ]]
 }
 
-function getRelease() {
-	awk -F= '/^release=/{print $2}' .release
+getRelease() {
+  awk -F= '/^release=/{print $2}' .release
 }
 
-function getBaseTag() {
-		sed -n -e "s/^tag=\(.*\)$(getRelease)\$/\1/p" .release
+getBaseTag() {
+  sed -n -e "s/^tag=\(.*\)$(getRelease)\$/\1/p" .release
 }
 
-function getTag() {
-	if [ -z "$1" ] ; then
-		awk -F= '/^tag/{print $2}' .release
-	else
-		echo "$(getBaseTag)$1"
-	fi
+getTag() {
+  if [[ -z "$1" ]]; then
+    awk -F= '/^tag/{print $2}' .release
+  else
+    printf '%s%s\n' "$(getBaseTag)" "$1"
+  fi
 }
 
-function setRelease() {
-	if [ -n "$1" ] ; then
-		sed -i.x -e "s/^tag=.*/tag=$(getTag $1)/" .release
-		sed -i.x -e "s/^release=.*/release=$1/g" .release
-		rm -f .release.x
-		runPreTagCommand "$1"
-	else
-		echo "ERROR: missing release version parameter " >&2
-		return 1
-	fi
+setRelease() {
+  if [[ -n "$1" ]]; then
+    sed -i.x -e "s/^tag=.*/tag=$(getTag "$1")/" .release
+    sed -i.x -e "s/^release=.*/release=$1/g" .release
+    rm -f .release.x
+    runPreTagCommand "$1"
+  else
+    echo "ERROR: missing release version parameter " >&2
+    return 1 2>/dev/null || exit 1
+  fi
 }
 
-function runPreTagCommand() {
-	if [ -n "$1" ] ; then
-		COMMAND=$(sed -n -e "s/@@RELEASE@@/$1/g" -e 's/^pre_tag_command=\(.*\)/\1/p' .release)
-		if [ -n "$COMMAND" ] ; then
-			if ! OUTPUT=$(bash -c "$COMMAND" 2>&1) ; then echo $OUTPUT >&2 && exit 1 ; fi
-		fi
-	else
-		echo "ERROR: missing release version parameter " >&2
-		return 1
-	fi
+runPreTagCommand() {
+  local COMMAND OUTPUT
+  if [[ -n "$1" ]]; then
+    COMMAND=$(sed -n -e "s/@@RELEASE@@/$1/g" -e 's/^pre_tag_command=\(.*\)/\1/p' .release)
+    if [[ -n "$COMMAND" ]]; then
+      if ! OUTPUT=$(bash -c "$COMMAND" 2>&1); then
+        echo "$OUTPUT" >&2
+        return 1 2>/dev/null || exit 1
+      fi
+    fi
+  else
+    echo "ERROR: missing release version parameter " >&2
+    return 1 2>/dev/null || exit 1
+  fi
+  unset -v COMMAND OUTPUT
 }
 
-function tagExists() {
-	tag=${1:-$(getTag)}
-	test -n "$tag" && test -n "$(git tag | grep "^$tag\$")"
+tagExists() {
+  local tag
+  tag=${1:-$(getTag)}
+  if git tag -l "$tag"; then
+    true
+  fi
+  unset -v tag
 }
 
-function differsFromRelease() {
-	tag=$(getTag)
-	! tagExists $tag || test -n "$(git diff --shortstat -r $tag .)"
+differsFromRelease() {
+  local tag
+  tag=$(getTag)
+  ! tagExists "$tag" || [[ -n "$(git diff --shortstat -r "$tag" .)" ]]
+  unset -v tag
 }
 
-function getVersion() {
-	result=$(getRelease)
+getVersion() {
+  local result
+  result=$(getRelease)
 
-	if differsFromRelease; then
-		result="$result-$(git rev-parse --short HEAD)"
-	fi
+  if differsFromRelease; then
+    result="$result-$(git rev-parse --short HEAD)"
+  fi
 
-	if hasChanges ; then
-		result="$result-dirty"
-	fi
-	echo $result
+  if hasChanges; then
+    result="$result-dirty"
+  fi
+  printf '%s\n' "$result"
+  unset -v result
 }
 
-function nextPatchLevel() {
-	version=${1:-$(getRelease)}
-	major_and_minor=$(echo $version | cut -d. -f1,2)
-	patch=$(echo $version | cut -d. -f3)
-	version=$(printf "%s.%d" $major_and_minor $(($patch + 1)))
-	echo $version
+nextPatchLevel() {
+  local version major patch
+  version=${1:-$(getRelease)}
+  major_and_minor=$(echo "$version" | cut -d. -f1,2)
+  patch=$(echo "$version" | cut -d. -f3)
+  # version=$( printf "%s.%d" "$major_and_minor" $(( patch + 1)) );
+  # printf '%s\n' "$version"
+  ((patch + 1))
+  printf '%s.%s\n' "$major_and_minor" "$patch"
+  unset -v version major_anf_minor patch
 }
 
-function nextMinorLevel() {
-	version=${1:-$(getRelease)}
-	major=$(echo $version | cut -d. -f1);
-	minor=$(echo $version | cut -d. -f2);
-	version=$(printf "%d.%d.0" $major $(($minor + 1))) ;
-	echo $version
+nextMinorLevel() {
+  local version major minor
+  version=${1:-$(getRelease)}
+  major=$(echo "$version" | cut -d. -f1)
+  minor=$(echo "$version" | cut -d. -f2)
+  # version=$( printf "%d.%d.0" "$major" $(( minor + 1)) );
+  # printf '%s\n' "$version"
+  ((minor + 1))
+  printf '%d.%d.0\n' "$major" "$minor"
+  unset -v version major minor
 }
 
-function nextMajorLevel() {
-	version=${1:-$(getRelease)}
-	major=$(echo $version | cut -d. -f1);
-	version=$(printf "%d.0.0" $(($major + 1)))
-	echo $version
+nextMajorLevel() {
+  local version major
+  version=${1:-$(getRelease)}
+  major=$(echo "$version" | cut -d. -f1)
+  # version=$( printf "%d.0.0" $(( major + 1)) );
+  # printf '%s\n' "$version"
+  ((major + 1))
+  printf '%d.0.0\n' "$major"
+  unset -v version major
 }
