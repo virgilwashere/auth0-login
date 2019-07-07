@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+"""Open the AWS console for the specified profile."""
+
 import json
 import click
 import logging
@@ -27,14 +30,24 @@ from auth0_login import fatal, setting
 
 
 def get_federated_credentials(session: Session) -> ReadOnlyCredentials:
+    """Get federated credentials.."""
     iam = session.client('iam')
     sts = session.client('sts')
-    policy = {"Version": "2012-10-17", "Statement": [{"Action": "*", "Effect": "Allow", "Resource": "*"}]}
+    policy = {"Version": "2012-10-17",
+              "Statement": [{"Action": "*",
+                             "Effect": "Allow",
+                             "Resource": "*"}]}
     try:
         user = iam.get_user()
-        r = sts.get_federation_token(Name=user['User']['UserName'], DurationSeconds=setting.ROLE_DURATION, Policy=json.dumps(policy))
+        r = sts.get_federation_token(
+            Name=user['User']['UserName'],
+            DurationSeconds=setting.ROLE_DURATION,
+            Policy=json.dumps(policy))
         c = r['Credentials']
-        return ReadOnlyCredentials(access_key=c['AccessKeyId'], secret_key=c['SecretAccessKey'], token=c['SessionToken'])
+        return ReadOnlyCredentials(
+            access_key=c['AccessKeyId'],
+            secret_key=c['SecretAccessKey'],
+            token=c['SessionToken'])
     except ClientError as e:
         fatal('failed to get federation token, %s', e)
 
@@ -48,28 +61,42 @@ def open_aws_console(profile: str):
         c = get_federated_credentials(s)
 
     if not c.token:
-        fatal('cannot generated a console signin URL from credentials without a session token')
+        fatal('cannot generated a console signin URL from credentials'
+              'without a session token')
 
-    creds = {'sessionId': c.access_key, 'sessionKey': c.secret_key, 'sessionToken': c.token}
+    creds = {'sessionId': c.access_key,
+             'sessionKey': c.secret_key, 'sessionToken': c.token}
     logging.debug('obtaining AWS console signin token')
     response = requests.get("https://signin.aws.amazon.com/federation",
                             params={'Action': 'getSigninToken',
-                                    'SessionType': 'json', 'Session': json.dumps(creds)})
+                                    'SessionType': 'json',
+                                    'Session': json.dumps(creds)})
     if response.status_code != 200:
-        fatal("could not generate Console signin URL, %s,\n%s", response.status_code, response.text)
+        fatal("could not generate Console signin URL, %s,\n%s",
+              response.status_code, response.text)
 
     signin_token = response.json()['SigninToken']
-    params = {'Action': 'login', 'Issuer': 'awslogin', 'Destination': 'https://console.aws.amazon.com/',
+    params = {'Action': 'login',
+              'Issuer': 'awslogin',
+              'Destination': 'https://console.aws.amazon.com/',
               'SigninToken': signin_token}
     logging.debug('opening AWS console')
-    console = requests.Request('GET', 'https://signin.aws.amazon.com/federation', params=params)
+    console = requests.Request(
+        'GET', 'https://signin.aws.amazon.com/federation', params=params)
     prepared_link = console.prepare()
     webbrowser.open(prepared_link.url)
 
 
 @click.command('aws-console', help='open AWS console from profile')
-@click.option('--verbose', is_flag=True, default=False, help=' for tracing purposes')
-@click.option('--profile', required=True, help='to store the credentials under')
+@click.option('--verbose',
+              is_flag=True,
+              default=False,
+              help=' for tracing purposes')
+@click.option('--profile',
+              required=True,
+              help='to store the credentials under')
 def main(verbose, profile):
-    logging.basicConfig(format='%(levelname)s:%(message)s', level=(logging.DEBUG if verbose else logging.INFO))
+    """Open the AWS console for the specified profile."""
+    logging.basicConfig(format='%(levelname)s:%(message)s',
+                        level=(logging.DEBUG if verbose else logging.INFO))
     open_aws_console(profile)

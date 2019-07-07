@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""Write and/or export AWS credentials."""
+
 import logging
 import configparser
 from collections import namedtuple
@@ -69,7 +71,6 @@ def export_aws_credentials(credentials: AWSCredentials, profile: str):
 
     logging.info(
         f'Run these commands to export credentials for AWS profile {profile}.')
-    # f"""Run these commands to export credentials for AWS profile {profile}.""", err=True)
     click.echo(
         u"""{} AWS_ACCESS_KEY_ID={}""".format(envcommand,
                                               credentials.access_key))
@@ -85,5 +86,6 @@ def export_aws_credentials(credentials: AWSCredentials, profile: str):
                                                    credentials.session_token))
     if credentials.expiration:
         click.echo(
-            u"""{} AWS_SESSION_EXPIRATION={}""".format(envcommand,
-                                               f'{credentials.expiration}'))
+            u"""{} AWS_SESSION_EXPIRATION={}""".format(
+                envcommand,
+                f'"{credentials.expiration}"'))
