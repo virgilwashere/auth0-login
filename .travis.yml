@@ -1,0 +1,25 @@
+dist: trusty
+
+addons:
+  sonarcloud:
+    organization: "virgilwashere"
+    token:
+      secure: "tLdnKFfS+uwY9HDZ62LzwPnZldO9Q4+tDUNJFjWY/N60SGs2qmZuOB5wFenBBwceklBVPWQYCnSkZ3V+Lqmnvzh9Y41OO3FUWOvg92pHHJcz8H0W3cBLE1teWoxErfiJ95V2MrdFuxVUUhBmsj3rkN6NEV+CDsWttFKMBJadJd2sSbVfutRtozXGz3/JYVbQKG3SUztK5ieVzamhvD6xYv2lTzF574I/jiPcprdU675nzUSqwxHU73F0RBIfxiGWRuqia0CjUDZlMmI1Mr1elBt3fb3wPbrdI91hPlRXXJfro0JSCdoqB/1G1uOK/tj0FWo71Hq76CZey8dMp7KQfYC/Ri0X/5m1IqAxhOtnMI1FQW7AqNRze3QMbO3+PdLP5AvQFdMTNNXhdn/jzLHojDQePNYCRDro2RVOtq9i+GijhktBGU1vVHirMpIrVDTd+skp2vhkWtOGu6iLbd+bTwXRRxd57jIS4yIkEMMcAp6GSiy0sFlIgWZp7x38uxOS1Kntyo/u7YU/HP2lU2WXuUeEUSTxb+A6/d+/SiL8jCSpqquWeDa9EWmEzBORwJbwA6iJV0uO+6dlw5aeDs1UIv2MGDwPu5detbp9cH6gfY7skLqo1kJxtW5blQtpo38xy0D4TszGW69+oWpIya4H2AvPfQ9nxgpKRZoGDgVAMJw="
+
+git:
+  depth: false
+
+script:
+  - make clean
+  # Wraps the compilation with the Build Wrapper to generate configuration (used
+  # later by the SonarQube Scanner) into the "bw-output" folder
+  - build-wrapper-linux-x86-64 --out-dir bw-output make build
+  # Execute some tests
+  - make test
+  # And finally run the SonarQube analysis - read the "sonar-project.properties"
+  # file to see the specific configuration
+  - sonar-scanner
+
+cache:
+  directories:
+    - '$HOME/.sonar/cache'
