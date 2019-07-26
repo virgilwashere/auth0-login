@@ -13,4 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from auth0_login.util.url import assert_listen_port_is_available, get_listen_port_from_url
+from auth0_login.util.url import assert_listen_port_is_available
+from auth0_login.util.url import get_listen_port_from_url

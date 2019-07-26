@@ -62,8 +62,9 @@ resource "auth0_rule" "grant-admin" {
   script = <<EOF
 function (user, context, callback) {
 
-  user.awsRole = [ '${aws_iam_role.OAuthAdministrator.arn},${aws_iam_saml_provider.auth0-provider.arn}', 
-		   '${aws_iam_role.OAuthIdentity.arn},${aws_iam_saml_provider.auth0-provider.arn}'];
+  user.awsRole = [
+    '${aws_iam_role.OAuthAdministrator.arn}, ${aws_iam_saml_provider.auth0-provider.arn}',
+    '${aws_iam_role.OAuthIdentity.arn}, ${aws_iam_saml_provider.auth0-provider.arn}'];
   user.awsRoleSession = user.email;
 
   context.samlConfiguration.mappings = {

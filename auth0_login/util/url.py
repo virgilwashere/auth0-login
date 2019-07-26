@@ -30,7 +30,9 @@ def assert_listen_port_is_available(port: int):
 
 def get_listen_port_from_url(url: str) -> int:
     """
-    get the listen port from an url, if not specified, defaults to 443 for https and 80 for everything else.
+    Get the listen port from an url.
+
+    If not specified, defaults to 443 for https and 80 for everything else.
     """
     result = urlparse(url)
     authority = result.netloc.split(':')

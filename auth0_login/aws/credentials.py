@@ -40,9 +40,12 @@ def write_aws_credentials(credentials: AWSCredentials, profile: str):
     else:
         config.remove_option(profile, 'aws_session_token')
     if credentials.expiration:
-        config.set(profile, 'expiration', f'{credentials.expiration}')
+        config.set(
+            profile,
+            'aws_session_expiration',
+            f'"{credentials.expiration}"')
     else:
-        config.remove_option(profile, 'expiration')
+        config.remove_option(profile, 'aws_session_expiration')
     with open(filename, 'w+') as f:
         try:
             config.write(f)

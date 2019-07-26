@@ -31,22 +31,31 @@ class AWSAccountConfiguration(object):
 
     def alias_for_account(self, account) -> str:
         """
-        returns the alias for `account` from ~/.aws-accounts, or `account` if none found
+        Return the alias for `account`, or `account` if none found.
+
+        Reads data from ~/.aws-accounts.
         """
-        return next(iter(filter(lambda k: str(self.accounts[k]) == str(account), self.accounts.keys())),
+        return next(iter(filter(lambda k: str(self.accounts[k]) == str(account),
+                                self.accounts.keys())),
                     str(account))
 
     def account_for_alias(self, alias) -> str:
         """
-        returns the account for `alias` from ~/.aws-accounts, or none if not found
+        Return the account for `alias`, or none if not found.
+
+        Reads data from ~/.aws-accounts.
         """
         return self.accounts.get(alias, None)
 
     def get_account(self, account) -> AWSAccount:
         if re.match(r'^[0-9]+$', account):
-            result = AWSAccount(number=account, alias=self.alias_for_account(account))
+            result = AWSAccount(
+                number=account,
+                alias=self.alias_for_account(account))
         else:
-            result = AWSAccount(number=self.account_for_alias(account), alias=account)
+            result = AWSAccount(
+                number=self.account_for_alias(account),
+                alias=account)
             if not result.number:
                 fatal(f'{account} is not found in ~/.aws-accounts')
         return result
