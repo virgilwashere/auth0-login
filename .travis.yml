@@ -1,21 +1,25 @@
 dist: trusty
+language: python
+python:
+  - "3.6"
 
 addons:
   sonarcloud:
     organization: "virgilwashere"
     token:
-      secure: "tLdnKFfS+uwY9HDZ62LzwPnZldO9Q4+tDUNJFjWY/N60SGs2qmZuOB5wFenBBwceklBVPWQYCnSkZ3V+Lqmnvzh9Y41OO3FUWOvg92pHHJcz8H0W3cBLE1teWoxErfiJ95V2MrdFuxVUUhBmsj3rkN6NEV+CDsWttFKMBJadJd2sSbVfutRtozXGz3/JYVbQKG3SUztK5ieVzamhvD6xYv2lTzF574I/jiPcprdU675nzUSqwxHU73F0RBIfxiGWRuqia0CjUDZlMmI1Mr1elBt3fb3wPbrdI91hPlRXXJfro0JSCdoqB/1G1uOK/tj0FWo71Hq76CZey8dMp7KQfYC/Ri0X/5m1IqAxhOtnMI1FQW7AqNRze3QMbO3+PdLP5AvQFdMTNNXhdn/jzLHojDQePNYCRDro2RVOtq9i+GijhktBGU1vVHirMpIrVDTd+skp2vhkWtOGu6iLbd+bTwXRRxd57jIS4yIkEMMcAp6GSiy0sFlIgWZp7x38uxOS1Kntyo/u7YU/HP2lU2WXuUeEUSTxb+A6/d+/SiL8jCSpqquWeDa9EWmEzBORwJbwA6iJV0uO+6dlw5aeDs1UIv2MGDwPu5detbp9cH6gfY7skLqo1kJxtW5blQtpo38xy0D4TszGW69+oWpIya4H2AvPfQ9nxgpKRZoGDgVAMJw="
+      secure: "hswSW0BtOOp/Y8TtjiRZVw7rEysxOHi5pXOB/bDBSrgE6T6lrxxa+r80I2wh3W7CBQjLZl/geAwOXrau29McPrrhhA2pC8MWjao9TmnJIDONg/kuJ86p/H/N19tmPMBW6ctz7dWLtCyBalCJLReNRJkN2esQDzNJ+FxqkXHl+Hr1Z6TfuMgshLXDUq/D64uKTiWS1Wr1TWukWsUvqlXScwN2KCGH16/klBzeO5B6NhQudx6+e+1BGR9pubr8dybeCB9pmX1DoLnTzWSA03K2kBM1qY5ABGx5QyRSL3h/c8zclZ67//P0i6zzaR2kEALAIyAGKrgDDuGbR9ehCrtr+S6k8T+L7c1emz/H2ie5YRPisqV5MxvbjeJfj588ACSIXOyThGbyApfxG8CjeER8GAvaHS/RhzD+f4bYwpjyogQpa+Q28Y3owKrXJjQNorOnH7SKKJfCI26E2ZXsgHlb2o146u/McKtz4rj+PReXu8Uk/wjiUAAxU+oMi93xfMh1FWsnlRouA3PVLSqQzuBp8WxLeeFkBfqxfrQESG8kn1FzHF+meHmkGqe4etSKPUliMwe7ai3Sfj/j2PH6aYzgo6wcGrj7mUxcNudvUywFICCQmcq/GaCvoEbrWIK7j+2lzFyBCkOBBf/pGMc9KJ/XpD5/Nd4htcfVPxi7Gvj/Dow="
 
 git:
   depth: false
+
+install:
+  - pip install pipenv
 
 script:
   - make clean
   # Wraps the compilation with the Build Wrapper to generate configuration (used
   # later by the SonarQube Scanner) into the "bw-output" folder
   - build-wrapper-linux-x86-64 --out-dir bw-output make build
-  # Execute some tests
-  - make test
   # And finally run the SonarQube analysis - read the "sonar-project.properties"
   # file to see the specific configuration
   - sonar-scanner
